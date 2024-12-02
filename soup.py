@@ -36,28 +36,33 @@ def remove_relative_prob(soup, x1, x2, prob):
         soup.remove(x2)
         soup.remove_prob(x1, 1 / prob)
 
-def add_op(soup, x1, x2, y1, y2, z1, z2):
-    if soup.soup[y1] > soup.soup[x1]:
-        return add_op(soup, y1, y2, x1, x2, z1, z2)
-    # x1 > y1
-    x1_count = soup.soup[x1]
-    x2_count = soup.soup[x2]
-    y1_count = soup.soup[y1]
-    y2_count = soup.soup[y2]
-    if x1_count > x2_count:
-        assert x1_count >= y1_count
-        soup.remove(x1)
-        soup.remove_prob(x2, x2_count / x1_count)
-        if random.random() < y1_count / x1_count:
-            remove_relative_prob(soup, y1, y2, y2_count / y1_count)
-    else:
-        assert x2_count >= y2_count
-        soup.remove(x2)
-        soup.remove_prob(x1, x1_count / x2_count)
-        if random.random() < y2_count / x2_count:
-            remove_relative_prob(soup, y2, y1, y1_count / y2_count)
-    add_relative_prob(soup, z1, z2, 1 / (x1_count / x2_count + y1_count / y2_count))
-    
+def create_op(op):
+    def newop(soup, x1, x2, y1, y2, z1, z2):
+        if soup.soup[y1] > soup.soup[x1]:
+            return add_op(soup, y1, y2, x1, x2, z1, z2)
+        # x1 > y1
+        x1_count = soup.soup[x1]
+        x2_count = soup.soup[x2]
+        y1_count = soup.soup[y1]
+        y2_count = soup.soup[y2]
+        if x1_count > x2_count:
+            assert x1_count >= y1_count
+            soup.remove(x1)
+            soup.remove_prob(x2, x2_count / x1_count)
+            if random.random() < y1_count / x1_count:
+                remove_relative_prob(soup, y1, y2, y2_count / y1_count)
+        else:
+            assert x2_count >= y2_count
+            soup.remove(x2)
+            soup.remove_prob(x1, x1_count / x2_count)
+            if random.random() < y2_count / x2_count:
+                remove_relative_prob(soup, y2, y1, y1_count / y2_count)
+        add_relative_prob(soup, z1, z2, 1 / (op(x1_count / x2_count,  y1_count / y2_count)))
+    return newop
+
+add_op = create_op(lambda a, b: a + b)
+sub_op = create_op(lambda a, b: a - b)
+
 class Add:
     def __init__(self, n1, n2, res):
         self.n1 = n1
@@ -68,6 +73,17 @@ class Add:
 
     def operate(self, soup):
         add_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
+
+class Sub:
+    def __init__(self, n1, n2, res):
+        self.n1 = n1
+        self.n2 = n2
+        self.res = res
+        self.args = [n1 + "_1", n1 + "_2", n2 + "_1", n2 + "_2"]
+        self.res = [res + "_1", res + "_2"]
+
+    def operate(self, soup):
+        sub_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
 
 class Soup:
     BASE_COUNT = 100000
