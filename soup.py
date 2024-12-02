@@ -62,6 +62,7 @@ def create_op(op):
 
 add_op = create_op(lambda a, b: a + b)
 sub_op = create_op(lambda a, b: a - b)
+greater_op = create_op(lambda a, b: a > b)
 
 class Add:
     def __init__(self, n1, n2, res):
@@ -84,6 +85,17 @@ class Sub:
 
     def operate(self, soup):
         sub_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
+
+class Greater:
+    def __init__(self, n1, n2, res):
+        self.n1 = n1
+        self.n2 = n2
+        self.res = res
+        self.args = [n1 + "_1", n1 + "_2", n2 + "_1", n2 + "_2"]
+        self.res = [res + "_1", res + "_2"]
+
+    def operate(self, soup):
+        greater_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
 
 class Soup:
     BASE_COUNT = 100000
