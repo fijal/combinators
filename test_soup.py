@@ -43,3 +43,11 @@ def test_add():
     s.add_operator(Add("x", "y", "z"))
     s.iterate(Soup.BASE_COUNT)
     assert equals_enough(s.num("z"), 2.875)
+
+def test_add_1():
+    s = Soup()
+    s.add_num("x", 0.125)
+    s.add_num("y", 0.75)
+    s.add_operator(Add("x", "y", "z"))
+    s.iterate(Soup.BASE_COUNT)
+    assert equals_enough(s.num("z"), 0.875)

@@ -1,6 +1,6 @@
 
 
-import random
+import random, os
 
 class Rename:
     def __init__(self, n1, n2):
@@ -26,6 +26,16 @@ def add_relative_prob(soup, x1, x2, prob):
         soup.add(x2)
         soup.add_prob(x1, 1 / prob)
 
+def remove_relative_prob(soup, x1, x2, prob):
+    if soup.soup[x1] > soup.soup[x2]:
+        assert prob <= 1
+        soup.remove(x1)
+        soup.remove_prob(x2, prob)
+    else:
+        assert 1 / prob <= 1
+        soup.remove(x2)
+        soup.remove_prob(x1, 1 / prob)
+
 def add_op(soup, x1, x2, y1, y2, z1, z2):
     if soup.soup[y1] > soup.soup[x1]:
         return add_op(soup, y1, y2, x1, x2, z1, z2)
@@ -39,25 +49,15 @@ def add_op(soup, x1, x2, y1, y2, z1, z2):
         soup.remove(x1)
         soup.remove_prob(x2, x2_count / x1_count)
         if random.random() < y1_count / x1_count:
-            if y1_count > y2_count:
-                soup.remove(y1)
-                soup.remove_prob(y2, y2_count / y1_count)
-            else:
-                soup.remove(y2)
-                soup.remove_prob(y1, y1_count / y2_count)
-        add_relative_prob(soup, z1, z2, 1 / (x1_count / x2_count + y1_count / y2_count))
+            remove_relative_prob(soup, y1, y2, y2_count / y1_count)
     else:
+        assert x2_count >= y2_count
         soup.remove(x2)
         soup.remove_prob(x1, x1_count / x2_count)
         if random.random() < y2_count / x2_count:
-            if y2_count > y1_count:
-                soup.remove(y2)
-                soup.remove_prob(y1, y1_count / y2_count)
-            else:
-                soup.remove(y1)
-                soup.remove_prob(y2, y2_count / y1_count)
-        add_relative_prob(soup, z1, z2, x1_count / x2_count + y1_count / y2_count)
-
+            remove_relative_prob(soup, y2, y1, y1_count / y2_count)
+    add_relative_prob(soup, z1, z2, 1 / (x1_count / x2_count + y1_count / y2_count))
+    
 class Add:
     def __init__(self, n1, n2, res):
         self.n1 = n1
@@ -119,9 +119,10 @@ class Soup:
 
     def iterate(self, count):
         for i in range(count):
-#            if i % 1000 == 0 and i > 0:
-#                print("%.3f %.3f %.3f %d" % (self.num("x"), self.num("y"), self.num("z"), self.total))
-#                print(self.soup)
+            if os.getenv("LOG"):
+                if i % 1000 == 0 and i > 0:
+                    print("%.3f %.3f %.3f %d" % (self.num("x"), self.num("y"), self.num("z"), self.total))
+                    print(self.soup)
             one = self.rand_token()
             if one not in self.lookup_table:
                 continue
