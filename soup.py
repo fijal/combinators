@@ -36,33 +36,48 @@ def remove_relative_prob(soup, x1, x2, prob):
         soup.remove(x2)
         soup.remove_prob(x1, 1 / prob)
 
-def create_op(op):
-    def newop(soup, x1, x2, y1, y2, z1, z2):
-        if soup.soup[y1] > soup.soup[x1]:
-            return add_op(soup, y1, y2, x1, x2, z1, z2)
-        # x1 > y1
-        x1_count = soup.soup[x1]
-        x2_count = soup.soup[x2]
-        y1_count = soup.soup[y1]
-        y2_count = soup.soup[y2]
-        if x1_count > x2_count:
-            assert x1_count >= y1_count
-            soup.remove(x1)
-            soup.remove_prob(x2, x2_count / x1_count)
-            if random.random() < y1_count / x1_count:
-                remove_relative_prob(soup, y1, y2, y2_count / y1_count)
-        else:
-            assert x2_count >= y2_count
-            soup.remove(x2)
-            soup.remove_prob(x1, x1_count / x2_count)
-            if random.random() < y2_count / x2_count:
-                remove_relative_prob(soup, y2, y1, y1_count / y2_count)
-        add_relative_prob(soup, z1, z2, 1 / (op(x1_count / x2_count,  y1_count / y2_count)))
-    return newop
+def create_op(name, operand, rev_operand):
+    def wrapper(swap):
+        def newop(soup, x1, x2, y1, y2, z1, z2):
+            if soup.soup[y1] > soup.soup[x1]:
+                if swap:
+                    return op(soup, y1, y2, x1, x2, z1, z2)
+                return reverseop(soup, y1, y2, x1, x2, z1, z2)
+            # x1 > y1
+            x1_count = soup.soup[x1]
+            x2_count = soup.soup[x2]
+            y1_count = soup.soup[y1]
+            y2_count = soup.soup[y2]
+            if x1_count > x2_count:
+                assert x1_count >= y1_count
+                soup.remove(x1)
+                soup.remove_prob(x2, x2_count / x1_count)
+                if random.random() < y1_count / x1_count:
+                    remove_relative_prob(soup, y1, y2, y2_count / y1_count)
+            else:
+                assert x2_count >= y2_count
+                soup.remove(x2)
+                soup.remove_prob(x1, x1_count / x2_count)
+                if random.random() < y2_count / x2_count:
+                    remove_relative_prob(soup, y2, y1, y1_count / y2_count)
+            if swap:
+                v = rev_operand(x1_count / x2_count, y1_count / y2_count)
+            else:
+                v = operand(x1_count / x2_count, y1_count / y2_count)
+            if v == 0:
+                soup.add(z2)
+            else:
+                add_relative_prob(soup, z1, z2, 1 / v)
+        newop.__name__ = name
+        return newop
 
-add_op = create_op(lambda a, b: a + b)
-sub_op = create_op(lambda a, b: a - b)
-greater_op = create_op(lambda a, b: a > b)
+    reverseop = wrapper(True)
+    op = wrapper(False)
+    return op
+
+add_op = create_op("add", lambda a, b: a + b, lambda a, b: a + b)
+sub_op = create_op("sub", lambda a, b: a - b, lambda a, b: crash)
+greater_op = create_op("greater", lambda a, b: a > b, lambda a, b: a <= b)
 
 class Add:
     def __init__(self, n1, n2, res):
@@ -111,7 +126,7 @@ class Soup:
         return self.soup.get(item, 0)
 
     def num(self, n):
-        return self.soup[n + "_1"] / self.soup[n + "_2"]
+        return self.soup.get(n + "_1", 0) / self.soup[n + "_2"]
 
     def add(self, token, count=1):
         if token not in self.soup:

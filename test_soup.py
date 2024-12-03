@@ -6,6 +6,8 @@ from soup import Soup, Rename, Add, Sub, Greater
 EPSILON = 0.1
 
 def equals_enough(one, two):
+    if one == 0.0:
+        return (one - two) < EPSILON
     return abs(one - two) / one < EPSILON
 
 def test_soup():
@@ -71,7 +73,15 @@ def test_sub_2():
 def test_greater_1():
     s = Soup()
     s.add_num("x", 1.125)
-    s.add_num("y", 1.126)
+    s.add_num("y", 1.75)
     s.add_operator(Greater("y", "x", "z"))
     s.iterate(Soup.BASE_COUNT)
     assert equals_enough(s.num("z"), 1)
+
+def test_greater_2():
+    s = Soup()
+    s.add_num("x", 1.125)
+    s.add_num("y", 0.75)
+    s.add_operator(Greater("y", "x", "z"))
+    s.iterate(Soup.BASE_COUNT)
+    assert equals_enough(s.num("z"), 0)
