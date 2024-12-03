@@ -1,7 +1,7 @@
 
 import math
 
-from soup import Soup, Rename, Add, Sub, Greater
+from soup import Soup, Rename, Add, Sub, Greater, Fork
 
 EPSILON = 0.1
 
@@ -85,3 +85,18 @@ def test_greater_2():
     s.add_operator(Greater("y", "x", "z"))
     s.iterate(Soup.BASE_COUNT)
     assert equals_enough(s.num("z"), 0)
+
+def test_fork():
+    s = Soup()
+    s.add_num("x", 1.125)
+    s.add_operator(Fork("x", "y", "z"))
+    s.iterate(Soup.BASE_COUNT)
+    assert equals_enough(s.num("z"), 1.125)
+    assert equals_enough(s.num("y"), 1.125)
+
+    s = Soup()
+    s.add_num("x", 0.7)
+    s.add_operator(Fork("x", "y", "z"))
+    s.iterate(Soup.BASE_COUNT)
+    assert equals_enough(s.num("z"), 0.7)
+    assert equals_enough(s.num("y"), 0.7)

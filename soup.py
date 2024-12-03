@@ -12,11 +12,55 @@ class Rename:
     def operate(self, soup):
         rename_op(soup, self.args[0], self.args[1], self.res[0], self.res[1])
 
-class Copy:
-    def __init__(self, n1, n2):
-        self.n1 = n1
-        self.n2 = n2
-        self.args = [n1]
+def rename_op(soup, x1, x2, xp1, xp2):
+    count1 = soup.soup[x1]
+    count2 = soup.soup[x2]
+    if count1 > count2:
+        soup.remove(x1)
+        soup.add(xp1)
+        if random.random() < count2 / count1:
+            soup.remove(x2)
+        if random.random() < count2 / count1:
+            soup.add(xp2)
+    else:
+        soup.remove(x2)
+        soup.add(xp2)
+        if random.random() < count1 / count2:
+            soup.remove(x1)
+        if random.random() < count1 / count2:
+            soup.add(xp1)
+
+class Fork:
+    def __init__(self, n, res1, res2):
+        self.args = [n + "_1", n + "_2"]
+        self.res = [res1 + "_1", res1 + "_2", res2 + "_1", res2 + "_2"]
+
+    def operate(self, soup):
+        x1 = self.args[0]
+        x2 = self.args[1]
+        count1 = soup.soup[x1]
+        count2 = soup.soup[x2]
+        if count1 > count2:
+            soup.remove(x1)
+            soup.add(self.res[0])
+            soup.add(self.res[2])
+            if random.random() < count2 / count1:
+                soup.remove(x2)
+            if random.random() < count2 / count1:
+                soup.add(self.res[1])
+            if random.random() < count2 / count1:
+                soup.add(self.res[3])
+        else:
+            soup.remove(x2)
+            soup.add(self.res[1])
+            soup.add(self.res[3])
+            if random.random() < count1 / count2:
+                soup.remove(x1)
+            if random.random() < count1 / count2:
+                soup.add(self.res[0])
+            if random.random() < count1 / count2:
+                soup.add(self.res[2])
+
 
 def add_relative_prob(soup, x1, x2, prob):
     if prob <= 1:
@@ -194,21 +238,3 @@ class Soup:
         else:
             self.add(name + "_1", int(self.BASE_COUNT * val))
             self.add(name + "_2", self.BASE_COUNT)
-
-def rename_op(soup, x1, x2, xp1, xp2):
-    count1 = soup.soup[x1]
-    count2 = soup.soup[x2]
-    if count1 > count2:
-        soup.remove(x1)
-        soup.add(xp1)
-        if random.random() < count2 / count1:
-            soup.remove(x2)
-        if random.random() < count2 / count1:
-            soup.add(xp2)
-    else:
-        soup.remove(x2)
-        soup.add(xp2)
-        if random.random() < count1 / count2:
-            soup.remove(x1)
-        if random.random() < count1 / count2:
-            soup.add(xp1)
