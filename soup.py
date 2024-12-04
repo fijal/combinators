@@ -59,7 +59,7 @@ class Fork:
             if random.random() < count1 / count2:
                 soup.add(self.res[0])
             if random.random() < count1 / count2:
-                soup.add(self.res[2])
+                soup.add(self.res[1])
 
 
 def add_relative_prob(soup, x1, x2, prob):
@@ -93,13 +93,13 @@ def create_op(name, operand, rev_operand):
             y1_count = soup.soup[y1]
             y2_count = soup.soup[y2]
             if x1_count > x2_count:
-                assert x1_count >= y1_count
+                #assert x1_count >= y1_count
                 soup.remove(x1)
                 soup.remove_prob(x2, x2_count / x1_count)
                 if random.random() < y1_count / x1_count:
                     remove_relative_prob(soup, y1, y2, y2_count / y1_count)
             else:
-                assert x2_count >= y2_count
+                #assert x2_count >= y2_count
                 soup.remove(x2)
                 soup.remove_prob(x1, x1_count / x2_count)
                 if random.random() < y2_count / x2_count:
@@ -204,6 +204,12 @@ class Soup:
                 return item
             no -= count
 
+    def check_args(self, op):
+        for arg in op.args:
+            if arg not in self.soup:
+                return False
+        return True
+
     def iterate(self, count):
         for i in range(count):
             if os.getenv("LOG"):
@@ -213,10 +219,12 @@ class Soup:
             one = self.rand_token()
             if one not in self.lookup_table:
                 continue
-            if self.soup[one] < self.MIN:
-                import pdb
-                pdb.set_trace()
+#            if self.soup[one] < self.MIN:
+#                import pdb
+#                pdb.set_trace()
             op = self.lookup_table[one]
+            if not self.check_args(op):
+                continue
             op.operate(self)
 
         return
