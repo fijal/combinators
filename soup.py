@@ -120,8 +120,8 @@ def create_op(name, operand, rev_operand):
     return op
 
 add_op = create_op("add", lambda a, b: a + b, lambda a, b: a + b)
-sub_op = create_op("sub", lambda a, b: a - b, lambda a, b: crash)
-greater_op = create_op("greater", lambda a, b: a > b, lambda a, b: a <= b)
+#sub_op = create_op("sub", lambda a, b: a - b, lambda a, b: crash)
+#greater_op = create_op("greater", lambda a, b: a > b, lambda a, b: a <= b)
 
 class Add:
     def __init__(self, n1, n2, res):
@@ -133,6 +133,13 @@ class Add:
 
     def operate(self, soup):
         add_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
+
+    def probability(self, soup):
+        if soup[self.args[1]] == 0 or soup[self.args[3]] == 0:
+            return 0
+        return ((soup[self.args[0]] + soup[self.args[1]]) *
+                (soup[self.args[2]] + soup[self.args[3]]) /
+                (soup.total * soup.total))
 
 class Sub:
     def __init__(self, n1, n2, res):
@@ -163,13 +170,14 @@ class Soup:
     def __init__(self):
         self.soup = {}
         self.total = 0
-        self.operators = {}
-        self.lookup_table = {}
+        self.operators = []
 
     def __getitem__(self, item):
         return self.soup.get(item, 0)
 
     def num(self, n):
+        if self.soup.get(n + "_1", 0) + self.soup.get(n + "_2", 0) < self.MIN:
+            return "NaN"
         return self.soup.get(n + "_1", 0) / self.soup[n + "_2"]
 
     def add(self, token, count=1):
@@ -180,9 +188,7 @@ class Soup:
         self.total += count
 
     def add_operator(self, op):
-        for arg in op.args:
-            assert arg not in self.lookup_table # single use only, use fork!
-            self.lookup_table[arg] = op
+        self.operators.append(op)
 
     def add_prob(self, token, prob):
         if random.random() < prob:
@@ -197,47 +203,27 @@ class Soup:
         assert self.soup[token] >= 0
         self.total -= count
 
-    def rand_token(self):
-        no = random.randint(0, self.total)
-        for item, count in self.soup.items():
-            if no < count:
-                return item
-            no -= count
+    def pick_random_op(self):
+        lst = []
+        ans = []
+        for op in self.operators:
+            # we might want to have to add the counts as opposed to multiply them
+            lst.append(op.probability(self))
+            ans.append(op)
+        idx = random.random() * sum(lst)
+        i = 0
+        cur = 0.0
+        while True:
+            cur += lst[i]
+            if idx < cur:
+                return ans[i]
+            i += 1
 
-    def check_args(self, op):
-        for arg in op.args:
-            if arg not in self.soup:
-                return False
-        return True
 
     def iterate(self, count):
         for i in range(count):
-            if os.getenv("LOG"):
-                if i % 1000 == 0 and i > 0:
-                    print("%.3f %.3f %.3f %d" % (self.num("x"), self.num("y"), self.num("z"), self.total))
-                    print(self.soup)
-            one = self.rand_token()
-            if one not in self.lookup_table:
-                continue
-#            if self.soup[one] < self.MIN:
-#                import pdb
-#                pdb.set_trace()
-            op = self.lookup_table[one]
-            if not self.check_args(op):
-                continue
+            op = self.pick_random_op()
             op.operate(self)
-
-        return
-
-        if 0:
-            # XXXX optimize
-            one = "y1" # self.rand_token()
-            two = "y2" # self.rand_token()
-            three = "x1" # self.rand_token()
-            four = "x2" # self.rand_token()
-            op = self.operators.get((one, two, three, four))
-            if op:
-                op(soup, one, two, three, four)
 
     def add_num(self, name, val):
         if val > 1:

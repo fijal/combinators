@@ -15,6 +15,8 @@ def test_chain():
     s.add_num("i0", 0)
     for n in range(10):
         s.add_operator(Add("x%d" % n, "i%d" % n, "i%d" % (n + 1)))
-    for i in range(100):
+
+    for k in range(30):
+        print([s.num("i%d" % i) for i in range(11)])
+        print([s["i%d_1" % i] for i in range(11)])
         s.iterate(Soup.BASE_COUNT)
-        print(s.num("i10"), s.soup["i10_1"])
