@@ -120,19 +120,16 @@ def create_op(name, operand, rev_operand):
     return op
 
 add_op = create_op("add", lambda a, b: a + b, lambda a, b: a + b)
-#sub_op = create_op("sub", lambda a, b: a - b, lambda a, b: crash)
-#greater_op = create_op("greater", lambda a, b: a > b, lambda a, b: a <= b)
+sub_op = create_op("sub", lambda a, b: a - b, lambda a, b: crash)
+greater_op = create_op("greater", lambda a, b: a > b, lambda a, b: a <= b)
 
-class Add:
+class FloatBinaryOp:
     def __init__(self, n1, n2, res):
         self.n1 = n1
         self.n2 = n2
         self.res = res
         self.args = [n1 + "_1", n1 + "_2", n2 + "_1", n2 + "_2"]
         self.res = [res + "_1", res + "_2"]
-
-    def operate(self, soup):
-        add_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
 
     def probability(self, soup):
         if soup[self.args[1]] == 0 or soup[self.args[3]] == 0:
@@ -141,25 +138,15 @@ class Add:
                 (soup[self.args[2]] + soup[self.args[3]]) /
                 (soup.total * soup.total))
 
-class Sub:
-    def __init__(self, n1, n2, res):
-        self.n1 = n1
-        self.n2 = n2
-        self.res = res
-        self.args = [n1 + "_1", n1 + "_2", n2 + "_1", n2 + "_2"]
-        self.res = [res + "_1", res + "_2"]
+class Add(FloatBinaryOp):
+    def operate(self, soup):
+        add_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
 
+class Sub(FloatBinaryOp):
     def operate(self, soup):
         sub_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
 
-class Greater:
-    def __init__(self, n1, n2, res):
-        self.n1 = n1
-        self.n2 = n2
-        self.res = res
-        self.args = [n1 + "_1", n1 + "_2", n2 + "_1", n2 + "_2"]
-        self.res = [res + "_1", res + "_2"]
-
+class Greater(FloatBinaryOp):
     def operate(self, soup):
         greater_op(soup, self.args[0], self.args[1], self.args[2], self.args[3], self.res[0], self.res[1])
 
@@ -225,6 +212,8 @@ class Soup:
         while True:
             cur += lst[i]
             if idx < cur:
+                if ans[i].probability(self) == 0:
+                    return None # recalculate
                 return ans[i]
             i += 1
 
@@ -235,7 +224,10 @@ class Soup:
                 lst, ans = self.prep_random()
             op = self.pick_random_op(lst, ans)
             if op is None:
-                return
+                if sum(lst) == 0:
+                    return
+                lst, ans = self.prep_random()
+                continue
             op.operate(self)
 
     def add_num(self, name, val):
