@@ -204,15 +204,19 @@ class Soup:
         self.total -= count
 
     def pick_random_op(self):
+        # XXX we might want to *not* recalculate the probabilities
+        #     with every random op, but it's hard to calculate exactly
+        #     how many iterations we need to do that
         lst = []
         ans = []
         for op in self.operators:
-            # we might want to have to add the counts as opposed to multiply them
             lst.append(op.probability(self))
             ans.append(op)
         idx = random.random() * sum(lst)
         i = 0
         cur = 0.0
+        if sum(lst) == 0:
+            return None
         while True:
             cur += lst[i]
             if idx < cur:
@@ -223,6 +227,8 @@ class Soup:
     def iterate(self, count):
         for i in range(count):
             op = self.pick_random_op()
+            if op is None:
+                return
             op.operate(self)
 
     def add_num(self, name, val):

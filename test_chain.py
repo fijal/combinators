@@ -16,7 +16,7 @@ def test_chain():
     for n in range(10):
         s.add_operator(Add("x%d" % n, "i%d" % n, "i%d" % (n + 1)))
 
-    for k in range(30):
-        print([s.num("i%d" % i) for i in range(11)])
-        print([s["i%d_1" % i] for i in range(11)])
+    for k in range(10):
         s.iterate(Soup.BASE_COUNT)
+
+    assert equals_enough(s.num("i10"), 7.5)
