@@ -203,7 +203,9 @@ class Soup:
         assert self.soup[token] >= 0
         self.total -= count
 
-    def pick_random_op(self):
+    RANDOM_IN_A_ROW = 100
+
+    def prep_random(self):
         # XXX we might want to *not* recalculate the probabilities
         #     with every random op, but it's hard to calculate exactly
         #     how many iterations we need to do that
@@ -212,6 +214,9 @@ class Soup:
         for op in self.operators:
             lst.append(op.probability(self))
             ans.append(op)
+        return lst, ans
+
+    def pick_random_op(self, lst, ans):
         idx = random.random() * sum(lst)
         i = 0
         cur = 0.0
@@ -226,7 +231,9 @@ class Soup:
 
     def iterate(self, count):
         for i in range(count):
-            op = self.pick_random_op()
+            if i % self.RANDOM_IN_A_ROW == 0:
+                lst, ans = self.prep_random()
+            op = self.pick_random_op(lst, ans)
             if op is None:
                 return
             op.operate(self)
