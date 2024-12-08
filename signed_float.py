@@ -24,7 +24,7 @@ def add_signed_float(soup, name, f_v, extra=0):
         if f_v < -1.0:
             soup.add(name + '_a', extra)
             soup.add(name + '_b', soup.BASE_COUNT + extra)
-            soup.add(name + '_c', int(-f_v * soup.BASE_COUNT))
+            soup.add(name + '_c', int(soup.BASE_COUNT / (-f_v)))
         else:
             soup.add(name + "_a", extra)
             soup.add(name + "_b", int(-f_v * soup.BASE_COUNT) + extra)

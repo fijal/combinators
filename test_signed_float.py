@@ -7,13 +7,15 @@ EPSILON = 0.1
 def equals_enough(one, two):
     if one == 0.0:
         return (one - two) < EPSILON
-    return abs(one - two) / one < EPSILON
+    return abs(one - two) / abs(one) < EPSILON
 
 def test_signed_float():
     def check(a, b):
         s = Soup()
         add_signed_float(s, "a", a, extra=1000)
         add_signed_float(s, "b", b, extra=1000)
+        assert equals_enough(signed_val(s, "a"), a)
+        assert equals_enough(signed_val(s, "b"), b)
         s.add_operator(Add("a", "b", "c"))
         s.iterate(s.BASE_COUNT - 1000)
         assert equals_enough(signed_val(s, "c"), a + b)
