@@ -9,22 +9,25 @@ from soup import add_relative_prob, remove_relative_prob
 class SignedFloatBinaryOp:
     pass
 
-def add_signed_float(soup, name, f_v):
+def add_signed_float(soup, name, f_v, extra=0):
     """ Add a signed float to the soup
     """
     if f_v > 0.0:
+        soup.add(name + "_b", extra)
         if f_v >= 1.0:
-            yyy
+            soup.add(name + "_a", soup.BASE_COUNT + extra)
+            soup.add(name + "_c", int(soup.BASE_COUNT / f_v))
         else:
-            soup.add(name + "_a", int(f_v * soup.BASE_COUNT))
-            soup.add(name + "_b", 0)
+            soup.add(name + "_a", int(f_v * soup.BASE_COUNT) + extra)
             soup.add(name + "_c", soup.BASE_COUNT)
     else:
         if f_v < -1.0:
-            zzz
+            soup.add(name + '_a', extra)
+            soup.add(name + '_b', soup.BASE_COUNT + extra)
+            soup.add(name + '_c', int(-f_v * soup.BASE_COUNT))
         else:
-            soup.add(name + "_a", 0)
-            soup.add(name + "_b", int(-f_v * soup.BASE_COUNT))
+            soup.add(name + "_a", extra)
+            soup.add(name + "_b", int(-f_v * soup.BASE_COUNT) + extra)
             soup.add(name + "_c", soup.BASE_COUNT)
 
 def signed_val(soup, n):
@@ -70,11 +73,16 @@ class Add(SignedFloatBinaryOp):
         ya_count, yb_count, yc_count = soup.soup[ya], soup.soup[yb], soup.soup[yc]
         if xa_count + xb_count > xc_count:
             #assert x1_count >= y1_count
-            xxx
-            soup.remove(x1)
-            soup.remove_prob(x2, x2_count / x1_count)
-            if random.random() < y1_count / x1_count:
-                remove_relative_prob(soup, y1, y2, y2_count / y1_count)
+            soup.remove_prob(xa, xa_count / (xa_count + xb_count))
+            soup.remove_prob(xb, xb_count / (xa_count + xb_count))
+            soup.remove_prob(xc, xc_count / (xa_count + xb_count))
+            if random.random() < (ya_count + yb_count) / (xa_count + xb_count):
+                if ya_count + yb_count > yc_count:
+                    xxx
+                else:
+                    soup.remove(yc)
+                    soup.remove_prob(ya, ya_count / yc_count)
+                    soup.remove_prob(yb, yb_count / yc_count)
         else:
             #assert x2_count >= y2_count
             soup.remove(xc)
@@ -82,7 +90,9 @@ class Add(SignedFloatBinaryOp):
             soup.remove_prob(xb, xb_count / xc_count)
             if random.random() < yc_count / xc_count:
                 if ya_count + yb_count > yc_count:
-                    xxx
+                    soup.remove_prob(ya, ya_count / (ya_count + yb_count))
+                    soup.remove_prob(yb, yb_count / (ya_count + yb_count))
+                    soup.remove_prob(yc, yc_count / (ya_count + yb_count))
                 else:
                     soup.remove(yc)
                     soup.remove_prob(ya, ya_count / yc_count)
@@ -97,8 +107,7 @@ class Add(SignedFloatBinaryOp):
         elif v > 0:
             add_relative_prob(soup, za, zb, zc, 1 / v)
         else:
-            yyy
-            add_relative_prob(soup, za, zb, zc, 1 / v)
+            add_relative_prob(soup, zb, za, zc, 1 / -v)
 
 def add_relative_prob(soup, za, zb, zc, prob):
     assert prob >= 0

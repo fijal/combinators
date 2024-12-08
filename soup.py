@@ -168,6 +168,7 @@ class Soup:
         return self.soup.get(n + "_1", 0) / self.soup[n + "_2"]
 
     def add(self, token, count=1):
+        assert count >= 0
         if token not in self.soup:
             self.soup[token] = count
         else:
@@ -219,9 +220,17 @@ class Soup:
 
 
     def iterate(self, count):
+        from signed_float import signed_val
+
+        if os.getenv("LOG", ""):
+            print("ITERATING")
         for i in range(count):
             if i % self.RANDOM_IN_A_ROW == 0:
+                # XXX a bit of a hack, reconsider
                 lst, ans = self.prep_random()
+            if os.getenv("LOG", ""):
+                if i % 1000 == 0 and i > 0:
+                    print(signed_val(self, "a"), signed_val(self, "b"), signed_val(self, "c"))
             op = self.pick_random_op(lst, ans)
             if op is None:
                 if sum(lst) == 0:
