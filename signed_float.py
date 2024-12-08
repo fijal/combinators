@@ -78,7 +78,9 @@ class Add(SignedFloatBinaryOp):
             soup.remove_prob(xc, xc_count / (xa_count + xb_count))
             if random.random() < (ya_count + yb_count) / (xa_count + xb_count):
                 if ya_count + yb_count > yc_count:
-                    xxx
+                    soup.remove_prob(ya, ya_count / (ya_count + yb_count))
+                    soup.remove_prob(yb, yb_count / (ya_count + yb_count))
+                    soup.remove_prob(yc, yc_count / (ya_count + yb_count))
                 else:
                     soup.remove(yc)
                     soup.remove_prob(ya, ya_count / yc_count)
